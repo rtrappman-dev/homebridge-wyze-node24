@@ -30,7 +30,6 @@
     "base64-js": "1.5.1",
     "colorsys": "^1.0.22",
     "crypto-js": "4.2.0",
-    "homebridge-config-ui-x": "^4.56.4",
     "inherits": "2.0.4",
     "md5": "^2.2.1",
     "moment": "2.29.4",
