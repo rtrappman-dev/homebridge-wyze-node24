@@ -1,6 +1,6 @@
 {
   "name": "@homebridge-wyze-node24/homebridge-wyze-node24",
-  "version": "1.0.00",
+  "version": "1.0.01",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
