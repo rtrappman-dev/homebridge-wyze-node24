@@ -1,6 +1,6 @@
 {
   "name": "@homebridge-wyze-node24/homebridge-wyze-node24",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Wyze Smart Home plugin for Homebridge compatible with Node.JS 24",
   "license": "MIT",
   "main": "src/index.js",
@@ -52,6 +52,10 @@
     },
     {
       "type": "venmo",
+      "url": "https://account.venmo.com/u/Rhett-Trappman-1"
+    },
+    {
+      "type": "github",
       "url": "https://account.venmo.com/u/Rhett-Trappman-1"
     }
   ]
