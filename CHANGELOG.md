@@ -1,6 +1,6 @@
-# homebridge-wyze-smart-home
+# homebridge-wyze-node24
 
-# Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer) [![Donate](https://img.shields.io/badge/Donate-Venmo-blue.svg?style=flat-square&maxAge=2592000)](https://venmo.com/u/Allen-Farmer) [![Donate](https://img.shields.io/badge/Donate-Cash_App-blue.svg?style=flat-square&maxAge=2592000)](https://cash.app/$Jfamer08)
+# Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/rtrappman) [![Donate](https://img.shields.io/badge/Donate-Venmo-blue.svg?style=flat-square&maxAge=2592000)](https://account.venmo.com/u/Rhett-Trappman-1)
 
 If you like what I have done here and want to help I would recommend that you firstly look into supporting Homebridge. None of this could happen without them.
 
@@ -8,7 +8,7 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
-### v0.5.48
+### v1.0.3
 - Add support for Node.js v24.13.1 in the Homebridge plugin engine requirements
 
 ### v0.5.46
