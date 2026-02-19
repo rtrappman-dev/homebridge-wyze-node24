@@ -1,7 +1,7 @@
 {
   "name": "@homebridge-wyze-node24/homebridge-wyze-node24",
-  "version": "1.0.1",
-  "description": "Wyze Smart Home plugin for Homebridge",
+  "version": "1.0.2",
+  "description": "Wyze Smart Home plugin for Homebridge compatible with Node.JS 24",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
@@ -48,15 +48,11 @@
   "funding": [
     {
       "type": "paypal",
-      "url": "https://paypal.me/AllenFarmer"
+      "url": "https://www.paypal.com/paypalme/rtrappman"
     },
     {
       "type": "venmo",
-      "url": "https://venmo.com/u/Allen-Farmer"
-    },
-    {
-      "type": "cashApp",
-      "url": "https://cash.app/$Jfamer08"
+      "url": "https://account.venmo.com/u/Rhett-Trappman-1"
     }
   ]
 }
