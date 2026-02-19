@@ -36,7 +36,7 @@
     "querystring": "0.2.1",
     "urllib": "3.18.0",
     "utf8": "^3.0.0",
-    "uuid": "8.3.2",
+    "uuid": "13.0.0",
     "uuid-by-string": "4.0.0",
     "wyze-api": "1.1.7"
   },
