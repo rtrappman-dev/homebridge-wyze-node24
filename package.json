@@ -1,5 +1,5 @@
 {
-  "name": "homebridge-wyze-smart-home",
+  "name": "@homebridge-wyze-node24/homebridge-wyze-node24",
   "version": "0.5.48",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
@@ -12,13 +12,13 @@
     "Wyze",
     "Hoobs"
   ],
-  "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
+  "homepage": "https://github.com/rtrappman-dev/homebridge-wyze-node24/tree/main",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jfarmer08/homebridge-wyze-smart-home.git"
+    "url": "https://github.com/rtrappman-dev/homebridge-wyze-node24/tree/main"
   },
   "bugs": {
-    "url": "http://github.com/jfarmer08/homebridge-wyze-smart-home/issues"
+    "url": "https://github.com/rtrappman-dev/homebridge-wyze-node24/tree/main/issues"
   },
   "engines": {
     "homebridge": "^1.6.0 || ^2.0.0-beta.0",
