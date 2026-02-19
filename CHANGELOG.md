@@ -8,6 +8,9 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.48
+- Add support for Node.js v24.13.1 in the Homebridge plugin engine requirements
+
 ### v0.5.46
 - Update thermostat structure to new format
 - Update thermostat to have min/max thresholds closer to Wyze Thermostat thresholds -  https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/203

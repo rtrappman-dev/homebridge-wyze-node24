@@ -34,6 +34,10 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
 
+## Requirements
+- Node.js 18.20.4, 20.15.1, or 24.13.1
+- Homebridge 1.6.0+ (or 2.0.0 beta)
+
 ## Configuration
 
 Use the settings UI in Homebridge Config UI X to configure your Wyze account, or manually add the following to the platforms section of your config file:
