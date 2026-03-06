@@ -16,29 +16,42 @@
       },
       "username": {
         "title": "Username (E-Mail Address)",
-        "description": "The e-mail address used for your Wyze account",
+        "description": "The e-mail address used for your Wyze account. You can also set WYZE_USERNAME env var or use secretsFile.",
         "type": "string",
         "default": "",
         "required": true
       },
       "password": {
         "title": "Password",
-        "description": "The password used for your Wyze account",
+        "description": "The password used for your Wyze account. You can also set WYZE_PASSWORD env var or use secretsFile.",
         "type": "string",
+        "format": "password",
         "default": "",
         "required": true
       },
       "keyId": {
         "title": "Key ID",
-        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com",
+        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com. You can also set WYZE_KEY_ID env var or use secretsFile.",
         "type": "string",
+        "format": "password",
         "required": true
       },
       "apiKey": {
         "title": "API Key",
-        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com/)",
+        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com. You can also set WYZE_API_KEY env var or use secretsFile.",
         "type": "string",
+        "format": "password",
         "required": true
+      },
+      "secretsFile": {
+        "title": "Secrets file path (optional)",
+        "description": "Path to a local JSON file containing secrets (e.g., username/password/apiKey/etc). File must be chmod 600 (owner-only) or the plugin will refuse to start.",
+        "type": "string",
+        "default": "",
+        "required": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
       },
       "refreshInterval": {
         "title": "Refresh Interval",
@@ -63,7 +76,7 @@
       },
       "apiLogEnabled": {
         "title": "Enable API logging",
-        "description": "",
+        "description": "WARNING: may log request/response details from upstream libraries. Keep OFF unless you understand the risk.",
         "type": "boolean",
         "default": false,
         "condition": {
@@ -73,6 +86,15 @@
       "pluginLoggingEnabled": {
         "title": "Enable Plugin logging",
         "description": "",
+        "type": "boolean",
+        "default": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "dangerouslyAllowCustomBaseUrls": {
+        "title": "Dangerously allow custom API base URLs",
+        "description": "SECURITY WARNING: If enabled, the plugin will accept authBaseUrl/apiBaseUrl overrides. This can enable SSRF and credential exfiltration. Only enable if you know exactly what you're doing.",
         "type": "boolean",
         "default": false,
         "condition": {

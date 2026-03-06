@@ -3,6 +3,13 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
   TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
+const {
+  getValidatedBaseUrls,
+  resolveSecrets,
+  sanitizeDeviceName,
+  wrapLogger
+} = require('./security')
+
 const WyzeAPI = require('wyze-api') // Uncomment for Release
 //const WyzeAPI = require('./wyze-api/src') // Comment for Release
 const WyzePlug = require('./accessories/WyzePlug')
@@ -29,8 +36,8 @@ function delay(ms) {
 
 module.exports = class WyzeSmartHome {
   constructor(log, config, api) {
-    this.log = log
-    this.config = config
+    this.log = wrapLogger(log)
+    this.config = resolveSecrets(config || {}, this.log)
     this.api = api
     this.client = this.getClient()
 
@@ -44,6 +51,8 @@ module.exports = class WyzeSmartHome {
   }
 
   getClient() {
+    const { authBaseUrl, apiBaseUrl } = getValidatedBaseUrls(this.config, this.log)
+
     return new WyzeAPI({
       // User login parameters
       username: this.config.username,
@@ -57,9 +66,9 @@ module.exports = class WyzeSmartHome {
       lowBatteryPercentage: this.config.lowBatteryPercentage,
       //Storage Path
       persistPath: homebridge.user.persistPath(),
-      //URLs
-      authBaseUrl: this.config.authBaseUrl,
-      apiBaseUrl: this.config.apiBaseUrl,
+      //URLs (strictly validated)
+      authBaseUrl,
+      apiBaseUrl,
       // App emulation constants
       authApiKey: this.config.authApiKey,
       phoneId: this.config.phoneId,
@@ -83,14 +92,24 @@ module.exports = class WyzeSmartHome {
   }
 
   async runLoop() {
-    const interval = this.config.refreshInterval || DEFAULT_REFRESH_INTERVAL
+    const baseInterval = this.config.refreshInterval || DEFAULT_REFRESH_INTERVAL
+    let failures = 0
+
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
         await this.refreshDevices()
-      } catch (e) { }
+        failures = 0
+      } catch (e) {
+        failures += 1
+        const message = e?.message || String(e)
+        this.log.error(`Refresh loop error: ${message}`)
+      }
 
-      await delay(interval)
+      // simple backoff to avoid noisy retry loops on auth/network failures
+      const backoffMultiplier = Math.min(6, failures) // caps at 64x
+      const delayMs = baseInterval * (failures === 0 ? 1 : Math.pow(2, backoffMultiplier))
+      await delay(delayMs)
     }
   }
 
@@ -102,10 +121,10 @@ module.exports = class WyzeSmartHome {
       const timestamp = objectList.ts
       const devices = objectList.data.device_list
 
-      if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`)
+      if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`) 
       await this.loadDevices(devices, timestamp)
     } catch (e) {
-      this.log.error(`Error getting devices: ${e}`)
+      this.log.error(`Error getting devices: ${e?.message || e}`)
       throw e
     }
   }
@@ -122,7 +141,7 @@ module.exports = class WyzeSmartHome {
 
     const removedAccessories = this.accessories.filter(a => !foundAccessories.includes(a))
     if (removedAccessories.length > 0) {
-      if (this.config.pluginLoggingEnabled) this.log(`Removing ${removedAccessories.length} device(s)`)
+      if (this.config.pluginLoggingEnabled) this.log(`Removing ${removedAccessories.length} device(s)`) 
       const removedHomeKitAccessories = removedAccessories.map(a => a.homeKitAccessory)
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, removedHomeKitAccessories)
     }
@@ -131,28 +150,30 @@ module.exports = class WyzeSmartHome {
   }
 
   async loadDevice(device, timestamp) {
-    const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model, device.mac, device.nickname)
+    const safeNickname = sanitizeDeviceName(device.nickname)
+
+    const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model, device.mac, safeNickname)
     if (!accessoryClass) {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Unsupported device type: (Name: ${safeNickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
       return
     }
     else if (this.config.filterByMacAddressList?.find(d => d === device.mac) || this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${safeNickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
       return
     }
     else if (device.product_type == 'S1Gateway' && this.config.hms == false) {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is not enabled`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${safeNickname}) (MAC: ${device.mac}) because it is not enabled`)
       return
     }
 
 
     let accessory = this.accessories.find(a => a.matches(device))
     if (!accessory) {
-      const homeKitAccessory = this.createHomeKitAccessory(device)
+      const homeKitAccessory = this.createHomeKitAccessory(device, safeNickname)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${safeNickname} (MAC: ${device.mac})`)
     }
     accessory.update(device, timestamp)
 
@@ -192,16 +213,16 @@ module.exports = class WyzeSmartHome {
     }
   }
 
-  createHomeKitAccessory(device) {
+  createHomeKitAccessory(device, safeNickname) {
     const uuid = UUIDGen.generate(device.mac)
 
-    const homeKitAccessory = new Accessory(device.nickname, uuid)
+    const homeKitAccessory = new Accessory(safeNickname, uuid)
 
     homeKitAccessory.context = {
       mac: device.mac,
       product_type: device.product_type,
       product_model: device.product_model,
-      nickname: device.nickname
+      nickname: safeNickname
     }
 
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
@@ -224,7 +245,8 @@ module.exports = class WyzeSmartHome {
       try {
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
       } catch (error) {
-        this.log.error(`Error removing accessory ${homeKitAccessory.context.nickname} (MAC: ${homeKitAccessory.context.mac}) : ${error}`)
+        const safeName = sanitizeDeviceName(homeKitAccessory.context.nickname)
+        this.log.error(`Error removing accessory ${safeName} (MAC: ${homeKitAccessory.context.mac}) : ${error?.message || error}`)
       }
     }
   }

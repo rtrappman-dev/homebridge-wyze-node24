@@ -81,7 +81,12 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
     ) {
       return true;
     } else {
-      this.plugin.log(`Encountered invalid property value: ${JSON.stringify(property, null, 2)}`);
+      // Avoid logging raw API objects; they can contain device IDs / other sensitive fields.
+      if (this.plugin.config.pluginLoggingEnabled) {
+        this.plugin.log(
+          `Encountered invalid property value (pid=${property?.pid}, value=${String(property?.value)})`
+        );
+      }
       return false;
     }
   }

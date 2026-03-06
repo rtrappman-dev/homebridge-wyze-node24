@@ -1,4 +1,5 @@
 const { Service, Characteristic } = require("../types");
+const { sanitizeDeviceName } = require("../security");
 
 // Responses from the Wyze API can lag a little after a new value is set
 const UPDATE_THROTTLE_MS = 1000;
@@ -33,6 +34,7 @@ module.exports = class WyzeAccessory {
 
   async update(device, timestamp) {
     const productType = device.product_type;
+    const safeNickname = sanitizeDeviceName(device.nickname);
 
     switch (productType) {
       default:
@@ -40,14 +42,14 @@ module.exports = class WyzeAccessory {
           mac: device.mac,
           product_type: device.product_type,
           product_model: device.product_model,
-          nickname: device.nickname,
+          nickname: safeNickname,
         };
         break;
     }
 
     this.homeKitAccessory
       .getService(Service.AccessoryInformation)
-      .updateCharacteristic(Characteristic.Name, device.nickname)
+      .updateCharacteristic(Characteristic.Name, safeNickname)
       .updateCharacteristic(Characteristic.Manufacturer, "Wyze")
       .updateCharacteristic(Characteristic.Model, device.product_model)
       .updateCharacteristic(Characteristic.SerialNumber, device.mac)
