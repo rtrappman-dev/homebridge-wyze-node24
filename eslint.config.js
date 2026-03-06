@@ -8,7 +8,7 @@ module.exports = [
     files: ['src/**/*.js'],
     ...eslint.configs.recommended,
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 2024,
       sourceType: 'commonjs',
       globals: {
         module: 'readonly',

@@ -26,7 +26,7 @@ After you have done that if you feel like my work has been valuable to you I wel
 For more information about our version updates, please check our [change log](CHANGELOG.md).
 
 ## Requirements
-- Node.js 18.20.4, 20.15.1, or 24.13.1
+- Node.js 24.13.1+
 - Homebridge 1.6.0+ (or 2.0.0 beta)
 
 ## Configuration
@@ -63,7 +63,7 @@ Supported devices will be discovered and added to Homebridge automatically.
 * **`apiKey`** &ndash; Navigate to [this portal](https://developer-api-console.wyze.com/)
 * **`keyId`** &ndash; Navigate to [this portal](https://developer-api-console.wyze.com/), and click Login to sign in to your Wyze account.
 Note: Ensure that the login info you are using matches the info you use when logLevel into the Wyze app.
-Once you’ve signed in, you’ll be automatically redirected back to the developer page.
+Once you've signed in, you'll be automatically redirected back to the developer page.
 Click Create an API key for your API key to be created.
 Once created, you can click view to see the entire key.
 You should receive an email that a new API key has been generated.
