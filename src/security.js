@@ -111,15 +111,22 @@ function sanitizeDeviceName(name) {
 }
 
 function wrapLogger(log) {
-  const baseFn = typeof log === 'function' ? log : (...args) => log.info(...args)
+  const callLevel = (level, args) => {
+    const sanitizedArgs = args.map(sanitizeLogMessage)
 
-  const wrapped = (...args) => baseFn(...args.map(sanitizeLogMessage))
+    if (log && typeof log[level] === 'function') {
+      return log[level](...sanitizedArgs)
+    }
+
+    if (typeof log === 'function') {
+      return log(...sanitizedArgs)
+    }
+  }
+
+  const wrapped = (...args) => callLevel('info', args)
 
   for (const level of ['error', 'warn', 'info', 'debug']) {
-    const underlying = log?.[level]
-    if (typeof underlying === 'function') {
-      wrapped[level] = (...args) => underlying(...args.map(sanitizeLogMessage))
-    }
+    wrapped[level] = (...args) => callLevel(level, args)
   }
 
   return wrapped
