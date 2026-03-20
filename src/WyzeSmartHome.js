@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const { homebridge, Accessory, UUIDGen } = require('./types')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
   TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
@@ -29,6 +31,12 @@ const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
 
 const DEFAULT_REFRESH_INTERVAL = 30000
+const AUTH_FILE_PATTERNS = [
+  /^wyze-.*\.json$/i,
+  /.*-wyze\.json$/i,
+  /^wyze-tokens\.json$/i
+]
+const AUTH_RECOVERY_COOLDOWN_MS = 60000
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -39,6 +47,7 @@ module.exports = class WyzeSmartHome {
     this.log = wrapLogger(log)
     this.config = resolveSecrets(config || {}, this.log)
     this.api = api
+    this.lastAuthRecoveryAt = 0
     this.client = this.getClient()
 
     this.accessories = []
@@ -48,6 +57,10 @@ module.exports = class WyzeSmartHome {
 
   static register() {
     homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, WyzeSmartHome)
+  }
+
+  getPersistPath() {
+    return this.config.persistPath || homebridge.user.persistPath()
   }
 
   getClient() {
@@ -65,7 +78,7 @@ module.exports = class WyzeSmartHome {
       //App Config
       lowBatteryPercentage: this.config.lowBatteryPercentage,
       //Storage Path
-      persistPath: homebridge.user.persistPath(),
+      persistPath: this.getPersistPath(),
       //URLs (strictly validated)
       authBaseUrl,
       apiBaseUrl,
@@ -85,6 +98,59 @@ module.exports = class WyzeSmartHome {
       oliveAppId: this.config.oliveAppId, //  Required for the thermostat
       appInfo: this.config.appInfo // Required for the thermostat
     }, this.log)
+  }
+
+  shouldRecoverFromAuthError(error) {
+    const message = String(error?.message || error || '')
+
+    return message.includes('access token is error') ||
+      message.includes('refresh token is error') ||
+      message.includes('Refresh Token could not be used to get a new access token')
+  }
+
+  clearPersistedAuth() {
+    const persistPath = this.getPersistPath()
+    let removedCount = 0
+
+    try {
+      const stat = fs.statSync(persistPath)
+
+      if (stat.isDirectory()) {
+        for (const fileName of fs.readdirSync(persistPath)) {
+          if (!AUTH_FILE_PATTERNS.some(pattern => pattern.test(fileName))) continue
+
+          fs.unlinkSync(path.join(persistPath, fileName))
+          removedCount += 1
+        }
+      } else if (stat.isFile()) {
+        fs.unlinkSync(persistPath)
+        removedCount = 1
+      }
+    } catch (error) {
+      if (error?.code !== 'ENOENT') {
+        this.log.warn(`Failed to clear persisted Wyze auth: ${error?.message || error}`)
+      }
+    }
+
+    return removedCount
+  }
+
+  recoverFromAuthError(error) {
+    if (!this.shouldRecoverFromAuthError(error)) {
+      return false
+    }
+
+    const now = Date.now()
+    if (now - this.lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) {
+      return false
+    }
+
+    this.lastAuthRecoveryAt = now
+    const removedCount = this.clearPersistedAuth()
+    this.client = this.getClient()
+
+    this.log.warn(`Detected invalid Wyze auth tokens. Cleared ${removedCount} persisted auth file(s) from ${this.getPersistPath()} and recreated the Wyze client.`)
+    return true
   }
 
   didFinishLaunching() {
@@ -124,6 +190,10 @@ module.exports = class WyzeSmartHome {
       if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`) 
       await this.loadDevices(devices, timestamp)
     } catch (e) {
+      if (this.recoverFromAuthError(e)) {
+        return this.refreshDevices()
+      }
+
       this.log.error(`Error getting devices: ${e?.message || e}`)
       throw e
     }
