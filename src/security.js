@@ -133,6 +133,9 @@ function wrapLogger(log) {
 }
 
 function loadSecretsFromFile(secretsFile, log) {
+  if (secretsFile.includes('..') || path.isAbsolute(secretsFile)) {
+    throw new Error('Invalid file path')
+  }
   const stat = fs.statSync(secretsFile)
   // Must not be readable/writable by group/others
   if ((stat.mode & 0o077) !== 0) {
