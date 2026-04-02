@@ -59,5 +59,12 @@
       "type": "github",
       "url": "https://account.venmo.com/u/Rhett-Trappman-1"
     }
-  ]
+  ],
+  "pnpm": {
+    "overrides": {
+      "undici@<=6.24.0": "6.24.0",
+      "crypto-js@<=4.2.0": "4.2.0",
+      "axios@<=1.13.5": "1.13.5"
+    }
+  }
 }
