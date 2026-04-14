@@ -503,7 +503,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log.error(
         `[Camera Garage Door] Error setting target state for ${this.mac}: ${error.message}`
       );
-      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+      throw new this.plugin.api.hap.HapStatusError(this.plugin.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
     if (value == 0) {
       this.garageDoorService
