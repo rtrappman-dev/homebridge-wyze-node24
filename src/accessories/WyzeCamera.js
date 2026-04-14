@@ -497,7 +497,14 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera Garage Door] Setting Target State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.garageDoor(this.mac, this.product_model);
+    try {
+      await this.plugin.client.garageDoor(this.mac, this.product_model);
+    } catch (error) {
+      this.plugin.log.error(
+        `[Camera Garage Door] Error setting target state for ${this.mac}: ${error.message}`
+      );
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
     if (value == 0) {
       this.garageDoorService
         .getCharacteristic(Characteristic.CurrentDoorState)
